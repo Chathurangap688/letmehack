@@ -13,18 +13,16 @@
 
 namespace Dialog\Ideamart\USSD;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
+
 class MtUssdSender{
     var $server;
 
     public function __construct($server){
         $this->server = $server; // Assign server url
     }
-
-    /*
-        Get parameters form the application
-        check one or more addresses
-        Send them to ussdMany
-    **/
 
     public function ussd($applicationId, $password, $version, $responseMsg,
                          $sessionId, $ussdOperation, $destinationAddress, $encoding, $chargingAmount){
@@ -35,7 +33,7 @@ class MtUssdSender{
             return $this->ussdMany($applicationId, $password, $version, $responseMsg,
                 $sessionId, $ussdOperation, $destinationAddress, $encoding, $chargingAmount);
         } else {
-            throw new Exception("address should a string or a array of strings");
+            throw new \Exception("address should a string or a array of strings");
         }
     }
 
@@ -59,8 +57,7 @@ class MtUssdSender{
             "version" => $version,
             "chargingAmount" => $chargingAmount);
 
-        $jsonObjectFields = json_encode($arrayField);
-        return $this->sendRequest($jsonObjectFields);
+        return $this->sendRequest($arrayField);
     }
 
     /*
@@ -70,32 +67,15 @@ class MtUssdSender{
     **/
 
     private function sendRequest($jsonObjectFields){
-        $ch = curl_init($this->server);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonObjectFields);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = curl_exec($ch); //Send request and get response
-        curl_close($ch);
-        return $this->handleResponse($res);
-    }
-
-    /*
-        Get the response from sendRequest
-        check response is empty
-        return response
-    **/
-
-    private function handleResponse($resp){
-        if ($resp == "") {
-            throw new UssdException
-            ("Server URL is invalid", '500');
-        } else {
-            echo $resp;
+        try{
+            $client = new Client();
+            $res = $client->post($this->server, [RequestOptions::JSON => $jsonObjectFields]);
+        }catch (RequestException $e){
+            return $e->getMessage();
         }
-    }
 
+        return $res->getBody();
+    }
 }
 
 

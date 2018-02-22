@@ -12,26 +12,23 @@
  */
 namespace Dialog\Ideamart\LBS;
 
-class LbsClient{
-    var $log;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 
+class LbsClient{
     public function __construct(){
-        $this->log = new KLogger ( "lbs_client_debug.log" , KLogger::DEBUG );
+        // empty ctor
     }
 
     public function getResponse(LbsRequest $request){
-        $this->log->LogDebug("Request: ".$request->toJson());
-        $ch = curl_init($request->getServer());
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $request->toJson());
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        $this->log->LogDebug("Response:".$response);
-        curl_close($ch);
-        return $response;
+        try{
+            $client = new Client();
+            $res = $client->post($request->getServer(), [RequestOptions::JSON => $request->getArray()]);
+        }catch (RequestException $e){
+            return $e->getMessage();
+        }
+
+        return $res;
     }
 }
-
-?>

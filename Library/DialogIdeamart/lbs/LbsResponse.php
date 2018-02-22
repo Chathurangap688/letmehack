@@ -25,8 +25,7 @@ class LbsResponse{
     var $messageId;
     var $version;
 
-    public function __construct($jsonString){
-        $responseArray = json_decode($jsonString,true);
+    public function __construct($responseArray){
         $this->statusCode = $responseArray['statusCode'];
         $this->timeStamp = $responseArray['timeStamp'];
         $this->statusDetail = $responseArray['statusDetail'];
@@ -120,7 +119,12 @@ class LbsResponse{
     }
 
     public function toJson(){
-        $arrayField = array("statusCode" =>$this->statusCode,
+        $arrayField = $this->toArray();
+        return json_encode($arrayField);
+    }
+
+    public function getArray(){
+        return array("statusCode" =>$this->statusCode,
             "timeStamp" =>  $this->timeStamp,
             "statusDetail" => $this->statusDetail,
             "subscriberState" =>  $this->subscriberState,
@@ -130,7 +134,6 @@ class LbsResponse{
             "latitude" => $this->latitude,
             "messageId" => $this->messageId,
             "version" => $this->version);
-        return json_encode($arrayField);
     }
 
 }

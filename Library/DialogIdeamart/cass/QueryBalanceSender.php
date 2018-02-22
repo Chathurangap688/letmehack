@@ -1,26 +1,17 @@
 <?php
-/**
- *   (C) Copyright 1997-2013 hSenid International (pvt) Limited.
- *   All Rights Reserved.
- *
- *   These materials are unpublished, proprietary, confidential source code of
- *   hSenid International (pvt) Limited and constitute a TRADE SECRET of hSenid
- *   International (pvt) Limited.
- *
- *   hSenid International (pvt) Limited retains all title to and intellectual
- *   property rights in these materials.
- */
+
 namespace Dialog\Ideamart\CASS;
 
-use Dialog\Ideamart\CASS\CassException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 
-// include_once "KLogger.php";
+
 class QueryBalanceSender{
-    var $server;
+    private $server;
 
     public function __construct($server){
         $this->server = $server; // Assign server url
-        $this->logger = new KLogger ( "cass_debug.log" , KLogger::DEBUG );
     }
 
     /*
@@ -35,7 +26,7 @@ class QueryBalanceSender{
         } else if (is_string($subscriberId) && trim($subscriberId) != "") {
             return $this->queryBalanceMany($applicationId, $password, $subscriberId, $paymentInstrumentName, $accountId, $currency);
         } else {
-            throw new Exception("address should a string or a array of strings");
+            throw new \Exception("address should a string or a array of strings");
         }
     }
 
@@ -55,37 +46,19 @@ class QueryBalanceSender{
             "accountId" => $accountId,
             "currency" => $currency);
 
-        $jsonObjectFields = json_encode($arrayField); // encode the fields to json
-        return $this->sendRequest($jsonObjectFields);
+        return $this->sendRequest($arrayField);
     }
 
-    /*
-        Get the json request from queryBalanceMany
-        use curl methods to send queryBalance
-        Send the response to handleResponse
-    **/
 
-    private function sendRequest($jsonObjectFields){ //Use curl commands for send json request
-        $this->logger->LogDebug("QueryBalanceSender sendRequest() : Request=".$jsonObjectFields);
-        $ch = curl_init($this->server);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonObjectFields);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = curl_exec($ch); // Send the json request
-        curl_close($ch);
-
-        $this->logger->LogDebug("DirectDebitSender sendRequest() : Response=".$res);
-        if ($res == "") { // Check get the response successfully
-            throw new CassException
-            ("Server URL is invalid", '500');
-        } else {
-            return $res; //Return Success response
+    private function sendRequest($arrayFields){
+        try{
+            $client = new Client();
+            $res = $client->post($this->server, [RequestOptions::JSON => $arrayFields]);
+        }catch (RequestException $e){
+            return $e->getMessage();
         }
+
+        return $res;
     }
 }
 
-
-
-?>

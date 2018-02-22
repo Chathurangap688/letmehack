@@ -1,25 +1,15 @@
 <?php
-/**
- *   (C) Copyright 1997-2013 hSenid International (pvt) Limited.
- *   All Rights Reserved.
- *
- *   These materials are unpublished, proprietary, confidential source code of
- *   hSenid International (pvt) Limited and constitute a TRADE SECRET of hSenid
- *   International (pvt) Limited.
- *
- *   hSenid International (pvt) Limited retains all title to and intellectual
- *   property rights in these materials.
- */
 
 namespace Dialog\Ideamart\CASS;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 
 class DirectDebitSender{
-    var $server;
-    var $logger;
+    private $server;
 
     public function __construct($server){
         $this->server = $server; // Assign server url
-        $this->logger = new KLogger ( "cass_debug.log" , KLogger::DEBUG );
     }
 
     /*
@@ -28,13 +18,12 @@ class DirectDebitSender{
         Send them to cassMany
     **/
     public function cass($applicationId, $password, $externalTrxId, $subscriberId, $paymentInstrumentName, $accountId, $currency, $amount){
-        $this->logger->LogDebug("DirectDebitSender cass() : Parameters received: applicationId=".$applicationId." externalTrxId=".$externalTrxId." subscriberId=".$subscriberId." paymentInstrumentName=".$paymentInstrumentName." accountId=".$accountId." currency=".$currency." amount=".$amount);
         if (is_array($subscriberId)) {
             return $this->cassMany($applicationId, $password, $externalTrxId, $subscriberId, $paymentInstrumentName, $accountId, $currency, $amount);
         } else if (is_string($subscriberId) && trim($subscriberId) != "") {
             return $this->cassMany($applicationId, $password, $externalTrxId, $subscriberId, $paymentInstrumentName, $accountId, $currency, $amount);
         } else {
-            throw new Exception("Address should be a string or a array of strings");
+            throw new \Exception("Address should be a string or a array of strings");
         }
     }
 
@@ -46,7 +35,6 @@ class DirectDebitSender{
     **/
 
     private function cassMany($applicationId, $password, $externalTrxId, $subscriberId, $paymentInstrumentName, $accountId, $currency, $amount){
-        $this->logger->LogDebug("DirectDebitSender cassMany() : Parameters received: applicationId=".$applicationId." externalTrxId=".$externalTrxId." subscriberId=".$subscriberId." paymentInstrumentName=".$paymentInstrumentName." accountId=".$accountId." currency=".$currency." amount=".$amount);
         $arrayField = array("applicationId" => $applicationId, // set the fields as an array with parameter fields
             "password" => $password,
             "externalTrxId" => $externalTrxId,
@@ -56,8 +44,8 @@ class DirectDebitSender{
             "currency" => $currency,
             "amount" => $amount);
 
-        $jsonObjectFields = json_encode($arrayField); // encode the fields to json
-        return $this->sendRequest($jsonObjectFields);
+
+        return $this->sendRequest($arrayField);
     }
 
     /*
@@ -66,23 +54,14 @@ class DirectDebitSender{
         Send the response to handleResponse
     **/
 
-    private function sendRequest($jsonObjectFields){ //Use curl commands for send json request
-         $this->logger->LogDebug("DirectDebitSender sendRequest() : Request=".$jsonObjectFields);
-        $ch = curl_init($this->server);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonObjectFields);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = curl_exec($ch); // Send the json request
-        curl_close($ch);
-        $this->logger->LogDebug("DirectDebitSender sendRequest() : Response=".$res);
-        if ($res == "") {
-            throw new CassException ("Server URL is invalid", '500');
-        } else {
-            return $res; //Return Success response
+    private function sendRequest($arrayField){ //Use curl commands for send json request
+        try{
+            $client = new Client();
+            $res = $client->post($this->server, [RequestOptions::JSON => $arrayField]);
+        }catch (RequestException $e){
+            return $e->getMessage();
         }
+
+        return $res;
     }
 }
-
-?>

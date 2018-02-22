@@ -23,22 +23,21 @@ class SmsDeliveryReport{
         Get data from Json objects
         check the validity of the response
     **/
-    public function __construct(){
-        $array = json_decode(file_get_contents('php://input'), true);
+    public function __construct($array){
         $this->destinationAddress = $array['destinationAddress'];
         $this->timeStamp = $array['timeStamp'];
         $this->requestId = $array['requestId'];
         $this->deliverStatus = $array['deliverStatus'];
 
-
-        if ($this->destinationAddress != null && $this->deliverStatus != null) {
-            $deliveryRes = array("statusCode" => "S1000", "statusDetail" => "Success");
-            header("Content-type: application/json");
-            echo json_encode($deliveryRes);
-        } else {
-            throw new Exception("Some of the required parameters are not provided");
+        if ($this->destinationAddress == null && $this->deliverStatus == null) {
+            throw new \Exception("Some of the required parameters are not provided");
         }
+    }
 
+    public function getDeliveryResponse(){
+        $deliveryRes = array("statusCode" => "S1000", "statusDetail" => "Success");
+
+        return $deliveryRes;
     }
 
     /*
