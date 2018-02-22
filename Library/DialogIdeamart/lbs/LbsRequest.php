@@ -91,14 +91,18 @@ class LbsRequest{
     }
 
     public function toJson(){
-        $arrayField = array("applicationId" =>$this->appId,
+        $arrayField = $this->getArray();
+        return json_encode($arrayField);
+    }
+
+    public function getArray(){
+        return array("applicationId" =>$this->appId,
             "password" => $this->appPassword,
             "subscriberId" => $this->subscriberId,
             "serviceType" => $this->serviceType,
             "responseTime" => $this->responseTime,
             "freshness" => $this->freshness,
             "horizontalAccuracy" => $this->horizontalAccuracy);
-        return json_encode($arrayField);
     }
 
 }

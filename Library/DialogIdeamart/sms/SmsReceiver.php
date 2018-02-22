@@ -26,8 +26,7 @@ class SmsReceiver{
         Get data from Json objects
         check the validity of the response
     **/
-    public function __construct(){
-        $array = json_decode(file_get_contents('php://input'), true);
+    public function __construct($array){
         $this->sourceAddress = $array['sourceAddress'];
         $this->message = $array['message'];
         $this->requestId = $array['requestId'];
@@ -36,18 +35,19 @@ class SmsReceiver{
         $this->version = $array['version'];
 
         if (!((isset($this->sourceAddress) && isset($this->message)))) {
-            throw new Exception("Some of the required parameters are not provided");
-        } else {
-            // Success received response
-            $responses = array("statusCode" => "S1000", "statusDetail" => "Success");
-            header("Content-type: application/json");
-            echo json_encode($responses);
+            throw new \Exception("Some of the required parameters are not provided");
         }
     }
 
     /*
         Define getters to return receive data
     **/
+
+    public function getResponse(){
+        $responses = array("statusCode" => "S1000", "statusDetail" => "Success");
+
+        return $responses;
+    }
 
     public function getAddress(){
         return $this->sourceAddress;

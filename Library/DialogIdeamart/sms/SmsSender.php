@@ -1,16 +1,10 @@
 <?php
-/**
- *   (C) Copyright 1997-2013 hSenid International (pvt) Limited.
- *   All Rights Reserved.
- *
- *   These materials are unpublished, proprietary, confidential source code of
- *   hSenid International (pvt) Limited and constitute a TRADE SECRET of hSenid
- *   International (pvt) Limited.
- *
- *   hSenid International (pvt) Limited retains all title to and intellectual
- *   property rights in these materials.
- */
+
 namespace Dialog\Ideamart\SMS;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 
 class SmsSender{
     var $server;
@@ -31,7 +25,7 @@ class SmsSender{
         } else if (is_string($addresses) && trim($addresses) != "") {
             return $this->smsMany($message, array($addresses), $password, $applicationId, $sourceAddress, $deliveryStatusRequest, $charging_amount, $encoding, $version, $binary_header);
         } else {
-            throw new Exception("address should a string or a array of strings");
+            throw new \Exception("address should a string or a array of strings");
         }
     }
 
@@ -55,8 +49,7 @@ class SmsSender{
             "version" => $version,
             "binaryHeader" => $binary_header);
 
-        $jsonObjectFields = json_encode($arrayField);
-        return $this->sendRequest($jsonObjectFields);
+        return $this->sendRequest($arrayField);
     }
 
     /*
@@ -66,32 +59,15 @@ class SmsSender{
     **/
 
     private function sendRequest($jsonObjectFields){
-        $ch = curl_init($this->server);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonObjectFields);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = curl_exec($ch);
-        curl_close($ch);
-        return $this->handleResponse($res);
-    }
-
-    /*
-        Get the response from sendRequest
-        check response is empty
-        return response
-    **/
-
-    private function handleResponse($resp){
-        if ($resp == "") {
-            throw new SmsException
-            ("Server URL is invalid", '500');
-        } else {
-            echo $resp;
+        try{
+            $client = new Client();
+            $res = $client->post($this->server, [RequestOptions::JSON => $jsonObjectFields]);
+        }catch (RequestException $e){
+            return $e->getMessage();
         }
-    }
 
+        return $res->getBody();
+    }
 }
 
 
