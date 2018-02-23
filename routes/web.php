@@ -15,11 +15,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Admin Routes
-Route::get('/admin', function (){
-    return view('admin.dashboard');
-});
+// Admin auth Routes
+\App\Http\Controllers\Auth\AdminLoginController::routes(); // please take a look at this method to get an idea
 
-Route::get('/admin/login', function (){
-    return view('admin.auth.login');
-});
+// Admin routes
+\App\Http\Controllers\AdminController::routes();
